@@ -3,44 +3,37 @@
 
 void to_binString(char *ch, char *output)
 {
-    unsigned int val;
-    char str[8];
-    int i;
-    //char *p;
+	unsigned int val;
+	int i;
 
-    val = (int)*ch;
-	//printf("ch = %d\n", *ch);
-	//printf("val = %d\n", val);
-    //p = &str[0];
+	val = (int)*ch;
 
-    if( !val ) {
+	if( !val ) {
         //return -1;
-    }else {
-    	for(i = 0; i < 8; i++) {
-	    //printf("i = %d\n", i);
-		//printf("val = %d\n", val); 
-    	    	if( (val % 2) == 0 ) {  // val は偶数か？
-			printf("gu:0 ");
-		    	//str[7-i] = "0";    
-		   	 sprintf(str[], "1%s", str);  //  偶数の場合
-		} else {
-			printf("ki: 1 ");
-			//str[7-i] = "1";
-			sprintf(str[], "1%s", str);  //  奇数の場合
+	}else {
+		for(i = 0; i < 8; i++) {
+    			if( (val % 2) == 0 ) {  // val は偶数か？
+				//printf("gu:0 ");
+				output[7-i] = 0x30;    
+				 //sprintf(output, "1%s", output);  //  偶数の場合
+			} else {
+				//printf("ki: 1 ");
+				output[7-i] = 0x31;
+				//sprintf(output, "1%s", output);  //  奇数の場合
+			}
+			val = val >> 1;
 		}
-		val = val >> 1;
+		//for(i=0;i<10;i++){
+		//	printf("\noutput[%d] = %c\n", i, output[i]); 
+		//}
 	}
-	printf("\nstr = %s\n", str); 
-	output = str;
-    }
-    //return 0;
+	//return 0;
 }
 
-int diff_count(char sStr[8], char rStr[8])
+int diff_count(char *sStr, char *rStr)
 { 
-	int i;
-	int count;
-
+	int i=0;
+	int count=0;
 	while(sStr[i]!='\0' && rStr[i]!='\0') {
 		if(sStr[i] != rStr[i]){
 			count++;
@@ -57,9 +50,7 @@ int main(void)
 	char sfname[256] = "../SendFile/RandomString.txt"; //送信ファイル名
 	char rfname[256] = "../ReceiveFile/RandomString.txt"; //受信ファイル名
 	char sch, rch; //読みだした文字の格納
-	char *schp, *rchp; //sch,rchのポインタ
-	char sbin[8], rbin[8]; //2進数変換した文字の格納場所
-	char *sbinp, *rbinp;
+	char sbin[9], rbin[9]; //2進数変換した文字の格納場所
 	int diffcnt = 0; //誤りビット数のカウント用
 	char c;
 	int flag=0;
@@ -67,9 +58,6 @@ int main(void)
 
 	setvbuf(stdout, 0, _IONBF, 0); //アンバッファモード
 	
-	schp = &sch;
-	rchp = &rch;
-
 	i = 0;
 	while(1) {
 		if(i == 0) {
@@ -83,10 +71,12 @@ int main(void)
 		scanf("%s%*c", &c);
 		if(c == 'y') break;
 	}
-	
+	putchar('\n');
+
 	sfp = fopen(sfname, "r");
 	rfp = fopen(rfname, "r");
 	
+
 	if(sfp == NULL) {
 		printf("[%s] not found. \n", sfname); 
 		flag += 1;
@@ -110,23 +100,23 @@ int main(void)
 		default: break;
 	}
 
-
 	i = 0;
-	while(sch != EOF) {
-		printf("number %d\n", i);
+	while(1) {
+		//printf("number %d\n", i);
 
 		sch = fgetc(sfp);
-		printf("fgetc(sfp) = %c\n", sch);
+		if(sch == EOF) break; //EOF を検出したらbreakする
+		//printf("fgetc(sfp) = %c\n", sch);
 		rch = fgetc(rfp);
-		printf("fgetc(rfp) = %c\n", rch);
+		//printf("fgetc(rfp) = %c\n", rch);
+		
+		to_binString(&sch, sbin);
+		to_binString(&rch, rbin);
+		//printf("to_binstring(sch) = %s\n", sbin);
+		//printf("to_binstring(rch) = %s\n", rbin);
 
-		to_binString(schp, sbinp);
-		printf("to_binstring(sch) = %c\n", *sbinp);
-		to_binString(rchp, rbinp);
-		printf("to_binstring(rch) = %c\n", *rbinp);
-
-		diffcnt += diff_count(sbinp, rbinp);
-		printf("diff_count =\n", diffcnt);
+		diffcnt += diff_count(sbin, rbin);
+		//printf("diff_count = %d\n\n", diffcnt);
 
 		i++;
 	}
@@ -134,7 +124,7 @@ int main(void)
 	fclose(sfp);
 	fclose(rfp);
 
-	printf("Differendes between \n [%s] and [%s]\n:%d", sfname, rfname, diffcnt);
+	printf("Differendes between [%s] and [%s]\n:%d\n", sfname+3, rfname+3, diffcnt);
 	return 0;
 }
 
