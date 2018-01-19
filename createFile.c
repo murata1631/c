@@ -5,7 +5,7 @@
 
 int main(void){
 	FILE *fp; //FILE型構造体
-	char fname[] = "../SendFile/RandomString.txt";
+	char fname[] = "../SendFile/RandomString.bin";
 	char c;
 	char str;
 	int i;

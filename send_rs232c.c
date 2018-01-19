@@ -4,17 +4,19 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 HANDLE h;
 
-void main() {
+int main(void) {
 	int i=0;
-	char sBuf[1]; //SendFile関数で送信するデータのバッファ
+	char sBuf[65536]; //SendFile関数で送信するデータのバッファ
 	//char str[50000];
-	int baudRate = 9600; //RS232Cビットレーaト
-	unsigned long n, sSize;
+	int baudRate = 9600; //RS232Cビットレート
+	FILE *fp; //送信ファイルのポインタ
+	unsigned long nn, sSize;
 	unsigned int ret;
-	char fname[256] = "../SendFile/RandomString.txt"; //送信ファイル名
+	char fname[256] = "../SendFile/RandomString.bin"; //送信ファイル名
 	DCB dcb;
 	COMMTIMEOUTS cto;
 
@@ -33,12 +35,12 @@ void main() {
 			0,
 			NULL ); 
 	if ( h == INVALID_HANDLE_VALUE ) {
-		printf("Open Error!\n");
+		printf("Open Error !\n");
 		exit(1);
 	}
 	printf("file open !\n");
 	/* ----------------------------------------------
-	   シリアルポートの状態操作
+	   シリアルポートの状態s操作
 	   ---------------------------------------------- */
 	GetCommState( h, &dcb ); // シリアルポートの状態を取得
 	dcb.BaudRate = baudRate;
@@ -61,8 +63,8 @@ void main() {
 	/* ----------------------------------------------
 	   送信ファイル
 	   ---------------------------------------------- */
-	/*
-	fp = fopen(fname, "r");
+	
+	fp = fopen(fname, "rb");
 	if(fp == NULL) {
 		printf("[%s] file not found!\n", fname);
 		//printf("Create New File? (y / n)\n");
@@ -70,23 +72,27 @@ void main() {
 		printf("EOF");
 		return -1;
 	} else {
-		printf("[%s] file found out!\n", fname);
-		}
+		printf("[%s] file discovered!\n", fname);
 	}
-	*/
+	
 	/* ----------------------------------------------
 	   受信データの読み込み（１行分の文字列）
 	   ---------------------------------------------- */
+	
+	fgets(sBuf, sizeof(sBuf), fp);
+	sSize = strlen(sBuf);
+	
+	
 	ret = WriteFile( h,		//ファイルのハンドル
 		   	sBuf,	//送信データのバッファ
 		   	sSize,	//送信データのバイト数？
 		   	&nn,		//送信データのバイト数
-		   	0
+		   	NULL
 		 	);		//シリアルポートへ出力
 
 	if(ret == FALSE) {
 		printf("WriteFile failed !");
-		break;
+		//break;
 	}
 	if (sSize != nn) {
 		printf("sSize(%d) != nn(%d)", sSize, nn);

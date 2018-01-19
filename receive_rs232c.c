@@ -8,13 +8,17 @@
 
 HANDLE h;
 
-void main() {
+int main(void) {
 	int i=0;
-	char sBuf[1]; //ReadFile関数で読み取ったデータの格納場所
-	char str[50000];
+	char rBuf[65536]; //ReadFile関数で読み取ったデータの格納場所
+	char c;
+	//char str[50000];
 	int baudRate = 9600; //RS232Cビットレート
-	unsigned long nn;
-	char fname[256] = "../ReceiveFile/RandomString.txt"; //書き込み先のファイル名
+	FILE *fp; //受信ファイルのポインタ
+	unsigned long nn, rSize;
+	unsigned int ret;
+	int flag = 0;
+	char fname[256] = "../ReceiveFile/RandomString.bin"; //書き込み先のファイル名
 	DCB dcb;
 	COMMTIMEOUTS cto;
 
@@ -23,6 +27,7 @@ void main() {
 
 	/* ----------------------------------------------
 	   ファイルのクリエイト／オープン
+		}
 	   ---------------------------------------------- */
 	// クリエイトしたファイルのファイルハンドルを返す
 	h = CreateFile("COM3", 
@@ -61,15 +66,15 @@ void main() {
 	/* ----------------------------------------------
 	   書き込み先のファイル
 	   ---------------------------------------------- */
-	/*
-	fp = fopen(fname, "w");
+	
+	fp = fopen(fname, "rb");
 	if(fp == NULL) {
 		printf("[%s] file not found!\n", fname);
 		printf("Create New File? (y / n)\n");
 		//fflush(0);
 		scanf("%c%*c", &c);
 		if(c == 'y') {
-			fp = fopen(fname, "w");
+			fp = fopen(fname, "wb");
 			printf("[%s] file create!\n", fname);
 		} else {
 			fclose(fp);
@@ -77,13 +82,13 @@ void main() {
 			return -1;
 		}
 	} else {
-		printf("[%s] file found out!\n", fname);
+		printf("find out [%s] file !\n", fname);
 		fclose(fp);
 		printf("overwrite ? (y / n)\n");
 		//fflush(0);
 		scanf("%c", &c);
 		if(c == 'y') {
-			fp = fopen(fname, "w");
+			fp = fopen(fname, "wb");
 			if(fp == NULL) return -1;
 			printf("mode: overwite\n");
 		} else {
@@ -92,20 +97,37 @@ void main() {
 
 		}
 	}
-	*/
+	
 	/* ----------------------------------------------
 	   受信データの読み込み（１行分の文字列）
 	   ---------------------------------------------- */
+	rSize = sizeof(rBuf);
 	while(1) {
-		ReadFile( h,	//ファイルのハンドル
-			sBuf,	//データバッファ
-			1,	//読み取り対象のバイト数
+		//rSize = GetFileSize(h,NULL);
+		ret = ReadFile( h,	//ファイルのハンドル
+			rBuf,	//データバッファ
+			rSize, //GetFileSize(h, NULL),	//読み取り対象のバイト数
 			&nn,	//読み取ったバイト数
-			0	//オーバーラップ構造体のバッファ
+			NULL	//オーバーラップ構造体のバッファ
 			);	// シリアルポートに対する読み込み
-
+		printf("GetFileSize = %d\n", rSize);
+		if (ret == FALSE) {
+				printf("ReadFile failed !");
+				break;
+			}
+		if(rSize != nn) {
+			printf("rSize(%d) != nn(%d)\n", rSize, nn);
+		}
+		if(nn != 0) {
+			flag = 1;
+		}
+			if(flag == 1 && nn == 0) {
+				printf("rBuf = %s", rBuf);
+				fprintf(fp, "%s",rBuf);
+				break;
+			}
 		//	printf("readfile OK\n");
-		if ( nn==1 ) {
+		//if ( nn==1 ) {
 			//printf("nn ==1\n");
 			//if ( sBuf[0]==10 || sBuf[0]==13 ) { // '\r'や'\n'を受信すると文字列を閉じる
 				//printf("find out return key\n");
@@ -113,15 +135,14 @@ void main() {
 					//str[i] = '\0';
 					//i=0;
 					//printf("%s\n",str);
-					fprintf(fp, "%c",sBuf[0]);
 				//}
 			//} else { 
 			//	str[i] = sBuf[0];
 			//	i++;
 			//}
-		} else {
-			printf(" ! nn = %lu\n");
-		}
+		//} else {
+		//	printf(" ! nn = %lu\n");
+		//}
 	}
 
 	fclose(fp);
