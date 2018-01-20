@@ -16,8 +16,9 @@ int main(void) {
 	int baudRate = 9600; //RS232Cビットレート
 	FILE *fp; //受信ファイルのポインタ
 	unsigned long nn, rSize;
+	unsigned long rn = 0; //受信バッファの配列番号を指定
 	unsigned int ret;
-	int flag = 0;
+	int flag = 0; //受信終了の判定に使用
 	char fname[256] = "../ReceiveFile/RandomString.bin"; //書き込み先のファイル名
 	DCB dcb;
 	COMMTIMEOUTS cto;
@@ -99,35 +100,39 @@ int main(void) {
 	}
 	
 	/* ----------------------------------------------
-	   受信データの読み込み（１行分の文字列）
+	   受信データの読み込み
 	   ---------------------------------------------- */
 	rSize = sizeof(rBuf);
 	while(1) {
 		//rSize = GetFileSize(h,NULL);
 		ret = ReadFile( h,	//ファイルのハンドル
-			rBuf,	//データバッファ
-			rSize, //GetFileSize(h, NULL),	//読み取り対象のバイト数
+			rBuf + rn,	//データバッファ
+			rSize - rn, //GetFileSize(h, NULL),	//読み取り対象のバイト数
 			&nn,	//読み取ったバイト数
 			NULL	//オーバーラップ構造体のバッファ
 			);	// シリアルポートに対する読み込み
+
+		rn += nn;  //受信データバッファの配列番号を調整
 		printf("GetFileSize = %d\n", rSize);
 		if (ret == FALSE) {
 				printf("ReadFile failed !");
 				break;
 			}
 		if(rSize != nn) {
-			printf("rSize(%d) != nn(%d)\n", rSize, nn);
+			printf("rSize(%d) != nn(%d)\n", rSize, nn); //デバッグ用
 		}
 		if(nn != 0) {
 			flag = 1;
 		}
-			if(flag == 1 && nn == 0) {
+			if(flag == 1 && nn == 0) { //受信終了
 				printf("rBuf = %s", rBuf);
 				fprintf(fp, "%s",rBuf);
 				break;
 			}
-		//	printf("readfile OK\n");
-		//if ( nn==1 ) {
+		
+			
+			//1bitずつ受信するときに使うかも？
+			//if ( nn==1 ) {
 			//printf("nn ==1\n");
 			//if ( sBuf[0]==10 || sBuf[0]==13 ) { // '\r'や'\n'を受信すると文字列を閉じる
 				//printf("find out return key\n");
