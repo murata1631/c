@@ -14,14 +14,14 @@ int main(void){
 	
 	printf("a binary = %b%c\n", 'a');
 
-	fp = fopen(fname, "r");
+	fp = fopen(fname, "rb");
 	if(fp == NULL) {
 		printf("[%s] file not found!\n", fname);
 		printf("Create New File? (y / n)\n");
 		//fflush(0);
 		scanf("%c%*c", &c);
 		if(c == 'y') {
-			fp = fopen(fname, "w");
+			fp = fopen(fname, "wb");
 			printf("[%s] file create!\n", fname);
 		} else {
 			fclose(fp);
@@ -35,7 +35,7 @@ int main(void){
 		//fflush(0);
 		scanf("%c", &c);
 		if(c == 'y') {
-			fp = fopen(fname, "w");
+			fp = fopen(fname, "wb");
 			if(fp == NULL) return -1;
 			printf("mode: overwite\n");
 		} else {
